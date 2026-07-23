@@ -102,7 +102,10 @@ For the site:
   `<site> | <job> | <result>`. The notification body IS these lines verbatim, so the result must be
   **scannable and start with a clear ACTION LABEL**, then the FULL clickable https URL(s), then a short
   what/why. Use these labels:
-  - Article day → `NEW ARTICLE (draft) - <full url(s)> - <topic, keyword> - <publish action>`
+  - Article day → `NEW ARTICLE (draft) - <full url(s)> - <topic, keyword> - <publish action> - Edit: <CMS edit link>`.
+    Every finished draft article gets a direct CMS edit link built from the site config's Pages CMS
+    edit link template (owner/repo/branch/collection), with the post's file path relative to repo
+    root url-encoded (`/` → `%2F`). See the site config's "Blog location and draft mechanism" entry.
   - Page day, created → `NEW PAGE (live|draft) - <full url> - <topic, keyword>`
   - Page day, optimized → `OPTIMIZED PAGE - <full url> - <exactly what was improved + the GSC reason>`
   - Page day, nothing to do → `PAGE - no change needed (all strong candidates already rank well)`
