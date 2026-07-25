@@ -7,6 +7,18 @@ markdown post. Since the nightly agent only ever writes markdown files under `sr
 **use the raw HTML markup below**, not the Astro component syntax (that's for reference only, in
 case a human later builds a page in `.astro` directly).
 
+## Known gotcha: Pages CMS's rich-text editor strips these components on save
+
+Opening a post in Pages CMS and saving it through the `body` field's rich-text (WYSIWYG) editor
+re-serializes the content to markdown it understands, which silently **strips these raw-HTML
+blocks down to plain paragraphs, headings, and bullet lists** (the div/span wrappers and their
+classes are lost entirely, and `draft` can also get flipped in the same save). This has already
+happened once: a draft with a correct quick-answer callout, disclosure strip, and pros/cons box
+came back from a Pages CMS save as plain unstyled text and a stray `draft: false`. Review a draft
+by reading the file directly or via the site's dev-only preview route, not by opening and saving
+it through Pages CMS's rich-text editor. If a human needs to hand-edit the body in Pages CMS,
+re-verify the raw HTML blocks and the `draft` value survived afterward before trusting the file.
+
 ## The one hard rule: no blank lines inside a block
 
 Astro's markdown renderer (remark/CommonMark) passes raw HTML straight through, uninterpreted,
