@@ -7,17 +7,26 @@ markdown post. Since the nightly agent only ever writes markdown files under `sr
 **use the raw HTML markup below**, not the Astro component syntax (that's for reference only, in
 case a human later builds a page in `.astro` directly).
 
-## Known gotcha: Pages CMS's rich-text editor strips these components on save
+## Fixed gotcha (know this if a site's .pages.yml still has it wrong): rich-text body fields destroy these components on every save
 
-Opening a post in Pages CMS and saving it through the `body` field's rich-text (WYSIWYG) editor
-re-serializes the content to markdown it understands, which silently **strips these raw-HTML
-blocks down to plain paragraphs, headings, and bullet lists** (the div/span wrappers and their
-classes are lost entirely, and `draft` can also get flipped in the same save). This has already
-happened once: a draft with a correct quick-answer callout, disclosure strip, and pros/cons box
-came back from a Pages CMS save as plain unstyled text and a stray `draft: false`. Review a draft
-by reading the file directly or via the site's dev-only preview route, not by opening and saving
-it through Pages CMS's rich-text editor. If a human needs to hand-edit the body in Pages CMS,
-re-verify the raw HTML blocks and the `draft` value survived afterward before trusting the file.
+If a `.pages.yml` posts collection has `body: { type: rich-text }`, **every single save through
+that field is guaranteed to strip these raw-HTML blocks**, not just occasionally. Pages CMS's
+rich-text field is a TipTap/ProseMirror WYSIWYG editor with no "raw HTML block" node in its
+schema, so it re-serializes any `<div class="...">` it doesn't recognize down to the nearest node
+type it does: `pros-cons` divs become `#### Pros` / `#### Cons` headings with bullet lists,
+`quick-answer` becomes a plain paragraph, `cta-button` becomes a plain markdown link, and
+`disclosure` becomes plain text. This isn't intermittent: it happened on wildscout.org's compass
+article three saves in a row, and never happened to the sleeping-pad article only because that one
+was never re-saved through the CMS after its components existed (confirmed via git history).
+
+**The fix, not a workaround:** for any collection whose posts use these raw-HTML component blocks,
+set `body: { type: code, options: { format: markdown } }` in `.pages.yml` instead of `rich-text`.
+Pages CMS's `code` field is a plain-text editor that stores content exactly as typed, with no
+parsing or re-serialization, so it round-trips these blocks correctly. wildscout.org's `.pages.yml`
+already uses this for its `posts` collection; if you're setting up a new site's `.pages.yml` (or
+adding a posts collection to one), configure `body` the same way from the start. Pages pages
+without these components (About, Privacy, Terms, etc.) can keep `rich-text` for its nicer editing
+UX since there's nothing for it to strip.
 
 ## The one hard rule: no blank lines inside a block
 
