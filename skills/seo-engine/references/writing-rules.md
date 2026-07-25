@@ -209,6 +209,16 @@ After writing, do **ONE** editor pass over the draft against this checklist. Thi
 - **First, confirm the humanizer pass actually ran on the body and the no-short-sentence scan is clean:**
   0 sentences under 6 words, 0 em/en dashes, no banned word/phrase hits. If any of those failed, run the
   humanizer pass + the short-sentence merge now, before anything else. This is the anti-slop gate.
+- **Then confirm the component gate is clean, by count, not by eye** (a site with `design-components.md`
+  components — quick-answer, pros/cons box, CTA button): grep-count `class="quick-answer"` (must be
+  exactly 1 for the whole piece) and, for every distinct product recommendation, both
+  `class="pros-cons"` and `class="cta-button"` (one of each, per recommended product). A quick-answer
+  that rendered as a bare "Quick answer" paragraph, a pros/cons list that came out as `#### Pros` /
+  `#### Cons` headings with bullets, or a plain `[text](url)` link standing in for a CTA button are each
+  a FAIL, the same tier as an em-dash or a banned word: rewrite the block into the exact raw-HTML syntax
+  from `design-components.md` now, before anything else. This most commonly happens when a draft got
+  re-saved through a CMS's rich-text/WYSIWYG editor, which cannot represent these blocks and silently
+  downgrades them, so re-check this gate after any such save, not only at first write.
 - Read the draft once and note ONLY the specific items that actually fail (most drafts pass most items).
 - Make **targeted fixes** to those specific items: edit the offending sentence/title/link/block. Do NOT
   rewrite the whole article, and do NOT regenerate images or re-run keyword research to "satisfy" the gate
@@ -238,6 +248,11 @@ After writing, do **ONE** editor pass over the draft against this checklist. Thi
 **Assets & technical:**
 - [ ] All images present (featured + one per H2), ultra-detailed prompts used, keyword-slug filenames,
       **first content image alt = exact focus keyword**, AVIF in-page + WebP OG, your site aesthetic.
+- [ ] On sites with `design-components.md` components: `class="quick-answer"` count = 1; every recommended
+      product has both a `class="pros-cons"` block and a `class="cta-button"` link (grep-count, don't eyeball
+      it). A product recommendation with only a bare inline link, or a component that rendered as plain
+      `#### Pros`/bullets/a plain link instead of the real markup, is a FAIL — fix it before shipping,
+      same as an em-dash.
 - [ ] 3-5 internal links, relevance-gated, descriptive anchors (bilingual: same-locale). No invented/broken URLs.
 - [ ] Format valid for the site: page-builder sites = valid blocks with UNIQUE ids + a FAQ accordion (no
       raw `<h2>/<p>` HTML); code-based sites = typecheck + build clean; JSON-LD + canonical present.
