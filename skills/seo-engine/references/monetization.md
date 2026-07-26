@@ -33,21 +33,27 @@ added here, including the disclosure.
 - Anchor text is the product's real name (e.g. "Osprey Atmos AG 65"), never "click here" / "buy
   here" / "this link" (also banned by writing-rules.md's anchor rule).
 
-## Minimums for product coverage (every article/page where products are genuinely relevant)
-These are floors for pieces that genuinely revolve around product recommendations (buying guides,
-gear roundups, "what should you buy" sections), not a mandate to insert products into a piece they
-don't fit. The existing rules still apply without exception: never invent a link, never force a
-product mention into a section it doesn't belong in, and the placeholder rule still governs any
-brand thin on Amazon.
-- **Target 4-6 real product links** in a long-form article (2,500+ words) where products are
-  genuinely relevant to the topic. Fewer is fine and expected when the topic only supports one or
-  two genuine recommendations; never pad to hit the number.
-- **Every recommended product gets its own pros/cons box** (see `design-components.md` for the exact
-  markup), not just the first or "primary" one. A one-line mention that isn't a real recommendation
-  (e.g. a passing comparison) doesn't need one; an actual "here's what to buy" recommendation does.
-- **Every affiliate link gets a CTA button** (`design-components.md`'s check-price button) in
-  addition to, never instead of, the normal inline text link in the sentence that recommends it.
-  An inline link with no CTA button is incomplete for a genuine product recommendation.
+## Product coverage: one hero recommendation, the rest woven in naturally
+These rules exist because identical pros/cons boxes stacked under every H2 read as mechanical and
+templated, not because the underlying monetization rules changed. The existing rules still apply
+without exception: never invent a link, never force a product mention into a section it doesn't
+belong in, and the placeholder rule still governs any brand thin on Amazon.
+- **4-5 affiliate links per article is the standard target** (long-form, 2,500+ words, where
+  products are genuinely relevant). Fewer is fine when the topic only supports one or two genuine
+  recommendations; never pad to hit the number.
+- **One pros/cons block per article, maximum** (see `design-components.md` for the exact markup),
+  reserved for the single main recommended product: the one thing you'd tell a friend to buy if
+  they only bought one thing. Every other product gets woven in naturally instead of a repeated box:
+  - a short **"recommended gear" list** near the end (3-5 items, product name as the link, one
+    clause on why), or
+  - an **inline contextual link** in the sentence where the product comes up naturally, or
+  - a **row in a comparison table** when the products genuinely differ on measurable specs (see
+    writing-rules.md's structural-variety section).
+  Never a repeated pros/cons box per product: that is exactly the mechanical pattern this rule
+  replaces.
+- **CTA button is reserved for the main recommendation's pros/cons block and the entries in the
+  recommended-gear list.** Do not attach a CTA button to every inline mention: an inline contextual
+  link in running prose is just a normal text link, no button.
 
 ## FTC disclosure (mandatory, exactly once per piece, exact wording)
 - Every article or page carrying at least one affiliate link must include the disclosure near the

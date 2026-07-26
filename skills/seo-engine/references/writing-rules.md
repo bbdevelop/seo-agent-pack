@@ -77,6 +77,23 @@ every UNIVERSAL rule plus your site's own VOICE rules (defined once in the templ
 - Self-review check: if removing every bullet/table and the article would feel *gutted*, the lists were
   load-bearing (OK). If it would simply read as cleaner prose, **convert them back to paragraphs**.
 
+### Structural variety across articles (avoid mechanical sameness)
+- **Vary the format between articles.** Not every post uses the same structure or the same
+  component placement: that sameness is itself a tell of automated content, on top of the sentence-
+  level slop this file already bans. Before writing, pick the shape that actually fits THIS topic,
+  from options like: bulleted takeaways, a step-by-step numbered guide, a comparison table, a
+  numbered checklist, or a spec-comparison table. Two consecutive articles should not read as the
+  same skeleton with different words dropped in.
+- **Comparison tables are encouraged, not just tolerated, where products or options genuinely
+  differ on measurable specs** (weight, capacity, R-value, price tier, and similar). This is the
+  natural home for products that didn't earn the article's one pros/cons block (see
+  `monetization.md`): a spec row is often clearer than another paragraph of prose.
+  Still a plain markdown table (see the caps and mobile-stacking rule above), still only when a
+  real 2-D comparison exists, never a dumping ground.
+- **Explicitly avoid a wall of identical paragraphs with the same component in the same place every
+  time.** If the last several articles all opened with the same shape and used a list in the same
+  spot, deliberately choose a different structural device for this one.
+
 ### Where the checks run
 - The jargon / em-dash / banned-word / bar-test checks run on **every rendered surface**, not just
   the body: title, meta description, **FAQ questions and answers**, image alts, and any structured
@@ -211,14 +228,21 @@ After writing, do **ONE** editor pass over the draft against this checklist. Thi
   humanizer pass + the short-sentence merge now, before anything else. This is the anti-slop gate.
 - **Then confirm the component gate is clean, by count, not by eye** (a site with `design-components.md`
   components — quick-answer, pros/cons box, CTA button): grep-count `class="quick-answer"` (must be
-  exactly 1 for the whole piece) and, for every distinct product recommendation, both
-  `class="pros-cons"` and `class="cta-button"` (one of each, per recommended product). A quick-answer
-  that rendered as a bare "Quick answer" paragraph, a pros/cons list that came out as `#### Pros` /
-  `#### Cons` headings with bullets, or a plain `[text](url)` link standing in for a CTA button are each
-  a FAIL, the same tier as an em-dash or a banned word: rewrite the block into the exact raw-HTML syntax
-  from `design-components.md` now, before anything else. This most commonly happens when a draft got
+  exactly 1 for the whole piece) and `class="pros-cons"` (must be **exactly 1 for the whole piece,
+  never more** — one hero recommendation gets the box, every other product is woven in per
+  `monetization.md`: a recommended-gear list, an inline link, or a comparison-table row). More than
+  one pros/cons block is a FAIL: collapse the extras into the recommended-gear list or a table row. A
+  quick-answer that rendered as a bare "Quick answer" paragraph, or a pros/cons list that came out as
+  `#### Pros` / `#### Cons` headings with bullets instead of the real markup, is also a FAIL, the same
+  tier as an em-dash or a banned word: rewrite the block into the exact raw-HTML syntax from
+  `design-components.md` now, before anything else. This most commonly happens when a draft got
   re-saved through a CMS's rich-text/WYSIWYG editor, which cannot represent these blocks and silently
   downgrades them, so re-check this gate after any such save, not only at first write.
+- **Then confirm structural variety, by count, not by eye:** the piece must contain at least one
+  list, table, or checklist somewhere in the body (not counting the FAQ). Zero structural elements in
+  a long-form piece is a FAIL, the same tier as the component gate: the piece read as a pure wall of
+  paragraphs. Pick whichever structural device (per writing-rules.md's structural-variety section)
+  actually fits the topic and add it now if missing.
 - Read the draft once and note ONLY the specific items that actually fail (most drafts pass most items).
 - Make **targeted fixes** to those specific items: edit the offending sentence/title/link/block. Do NOT
   rewrite the whole article, and do NOT regenerate images or re-run keyword research to "satisfy" the gate
@@ -248,11 +272,16 @@ After writing, do **ONE** editor pass over the draft against this checklist. Thi
 **Assets & technical:**
 - [ ] All images present (featured + one per H2), ultra-detailed prompts used, keyword-slug filenames,
       **first content image alt = exact focus keyword**, AVIF in-page + WebP OG, your site aesthetic.
-- [ ] On sites with `design-components.md` components: `class="quick-answer"` count = 1; every recommended
-      product has both a `class="pros-cons"` block and a `class="cta-button"` link (grep-count, don't eyeball
-      it). A product recommendation with only a bare inline link, or a component that rendered as plain
-      `#### Pros`/bullets/a plain link instead of the real markup, is a FAIL — fix it before shipping,
-      same as an em-dash.
+- [ ] On sites with `design-components.md` components: `class="quick-answer"` count = 1; `class="pros-cons"`
+      count = 1 (the single hero recommendation only — never more, per monetization.md), with a matching
+      `class="cta-button"`; other affiliate links appear via a recommended-gear list, inline contextual
+      links, or a comparison-table row instead of extra pros/cons boxes (grep-count, don't eyeball it). A
+      component that rendered as plain `#### Pros`/bullets/a plain link instead of the real markup is a
+      FAIL — fix it before shipping, same as an em-dash.
+- [ ] Structural variety: at least one list, table, or checklist appears somewhere in the body (grep for
+      `| ` table rows or `- `/`1. ` list markers outside the FAQ). Zero structural elements in a long-form
+      piece is a FAIL. Format is not identical to the last few articles: a different structural device or
+      component placement was deliberately chosen for this topic.
 - [ ] 3-5 internal links, relevance-gated, descriptive anchors (bilingual: same-locale). No invented/broken URLs.
 - [ ] Format valid for the site: page-builder sites = valid blocks with UNIQUE ids + a FAQ accordion (no
       raw `<h2>/<p>` HTML); code-based sites = typecheck + build clean; JSON-LD + canonical present.
