@@ -1,0 +1,25 @@
+# wildscout.org - network watchdog (/etc/cron.d format, runs as root)
+# STATUS: INSTALLED on this machine (bb@antiX) as of 2026-07-26, at
+# /etc/cron.d/wildscout-network-watchdog. This file is the source of truth -- if you edit it,
+# re-copy it over the installed one (see "To install" below) so the two don't drift.
+#
+# Why root, and why /etc/cron.d instead of `crontab`: recovery needs `ip link set wlan0 down/up`
+# and `service connman restart`, both of which require root, and bb has no passwordless sudo.
+# /etc/cron.d supports a "run as user" field per line, so this can be root-owned and root-run
+# without touching bb's own crontab (schedule/wildscout.org.crontab) or granting bb any new sudo
+# rights. Belt-and-suspenders behind the TLP wifi-powersave-off + fwlps=0/ips=0/swlps=0 modprobe
+# fix already applied for the RTL8723BE's known idle drop-outs.
+#
+# To install / re-sync after an edit:
+#   sudo install -o root -g root -m 644 \
+#     /home/bb/seo-agent-pack/schedule/wildscout-network-watchdog.cron \
+#     /etc/cron.d/wildscout-network-watchdog
+# To remove:
+#   sudo rm /etc/cron.d/wildscout-network-watchdog
+# To check it fired: tail /home/bb/seo-agent-pack/logs/$(date +%F)-network-watchdog.log
+# (file only exists on a day it actually had to intervene -- silent by design otherwise)
+PATH=/sbin:/usr/sbin:/usr/local/bin:/usr/bin:/bin
+
+# Every 5 minutes: ping the gateway; on 2 consecutive misses, bounce wlan0; if that doesn't
+# restore connectivity, restart connman. Locked against overlapping with itself.
+*/5 * * * * root /home/bb/seo-agent-pack/scripts/network-watchdog.sh
