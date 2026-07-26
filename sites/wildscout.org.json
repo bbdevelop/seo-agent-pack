@@ -1,0 +1,11 @@
+{
+  "domain": "wildscout.org",
+  "sitemapUrl": "https://wildscout.org/sitemap-index.xml",
+  "gscSiteUrl": "sc-domain:wildscout.org",
+  "gscKeyPath": "/home/bb/seo-agent-pack/secrets/gsc-service-account.json",
+  "registryPath": "/home/bb/wildscout-site/src/content/registry.json",
+  "indexNowKey": "27394fe1e8b2a7a5b57f54d3a3bfadbb66f5baf49a03468881aecdf3deb89921",
+  "indexNowHost": "wildscout.org",
+  "indexNowKeyLocation": "https://wildscout.org/27394fe1e8b2a7a5b57f54d3a3bfadbb66f5baf49a03468881aecdf3deb89921.txt",
+  "statusDir": "/home/bb/seo-agent-pack/status"
+}
