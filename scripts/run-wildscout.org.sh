@@ -10,6 +10,21 @@
 # it only gets the already-draft file onto GitHub.
 set -uo pipefail
 
+# cron can invoke this under a stripped environment where HOME itself is unset (not just
+# missing from PATH) -- under `set -u` that kills the script on the very next `$HOME`
+# reference below, before any log or alert can fire. Default it explicitly rather than
+# trusting the environment. (Root cause of the 2026-07-26 "HOME: unbound variable" failure.)
+: "${HOME:=/home/bb}"
+export HOME
+
+# Precautionary: keep CLAUDE_CODE_*/CLAUDECODE/AI_AGENT vars out of `claude -p` below. NOTE:
+# tested directly on 2026-07-27 and this alone does NOT fix the "what would you like help
+# with" failure (see the cwd fix further down, which is the actual cause). Harmless either way,
+# so left in as defensive hygiene against a live Claude Code session's Bash tool leaking these
+# in if this script is ever run manually from inside one.
+unset CLAUDE_CODE_SESSION_ID CLAUDE_CODE_CHILD_SESSION CLAUDECODE CLAUDE_CODE_ENTRYPOINT \
+      CLAUDE_CODE_EXECPATH AI_AGENT CLAUDE_PID CLAUDE_EFFORT
+
 # cron runs with a near-empty PATH (no .bashrc/.profile), so `claude` (~/.local/bin) and
 # node/npx (nvm) would otherwise be invisible to this script.
 export PATH="$HOME/.local/bin:$HOME/.nvm/versions/node/v24.18.0/bin:/usr/local/bin:/usr/bin:/bin:/usr/local/games:/usr/games:/sbin:/usr/sbin"
@@ -27,12 +42,37 @@ TODAY="$(date +%F)"
 # Absolute paths throughout: fail()/alert() may fire after we've cd'd into $SITE_REPO
 # for the git step, and a relative path would silently write to the wrong place.
 STATUS_FILE="$PACK_DIR/status/${TODAY}.txt"
-LOG_FILE="$PACK_DIR/logs/${TODAY}-${JOB}.log"
+LOG_DIR="$PACK_DIR/logs"
+LOG_FILE="$LOG_DIR/${TODAY}-${JOB}.log"
 SITE_JSON="$PACK_DIR/sites/wildscout.org.json"
 PROMPT_FILE="$PACK_DIR/prompts/nightly-run-wildscout.org.md"
 LOCK_FILE="/tmp/wildscout-org-${JOB}.lock"
+# claude -p must NEVER run with cwd inside $PACK_DIR -- see the article|page|sunday case below.
+CLAUDE_RUN_CWD="$HOME/.wildscout-cron-cwd"
 
-mkdir -p "$PACK_DIR/status" "$PACK_DIR/logs"
+mkdir -p "$PACK_DIR/status" 2>/dev/null
+
+# Sends a Telegram message without depending on the log file being writable. Used by the
+# pre-flight check below (before we know the log dir even works) and by alert() once it's
+# confirmed writable -- alert() redirects its own output INTO the log, so if that redirect
+# itself is what's broken, alert() silently never runs at all (the exact 2026-07-26 failure:
+# logs/ was root-owned, `>> "$LOG_FILE"` failed before python3 ever started, and `|| true`
+# swallowed it, so even the "FAILED" Telegram alert never sent).
+alert_raw() {
+  python3 "$PACK_DIR/scripts/telegram_bot.py" send "$TELEGRAM_CHAT_ID" "$1" > /dev/null 2>&1 || true
+}
+
+# Pre-flight: the log directory must exist and be writable by this user, or every FAILED
+# status below gets reported with zero log to explain why -- the exact silent failure above.
+if ! mkdir -p "$LOG_DIR" 2>/dev/null || [ ! -w "$LOG_DIR" ]; then
+  alert_raw "🔴 wildscout.org | ${JOB} FAILED: log directory ${LOG_DIR} does not exist or is not writable by $(whoami) (uid $(id -u)) -- no log was written for this run"
+  echo "wildscout.org | ${JOB} | FAILED (log directory ${LOG_DIR} not writable)" >> "$STATUS_FILE" 2>/dev/null || true
+  exit 1
+fi
+
+# First action once we know we CAN log: a run that dies immediately after this (bad lock,
+# claude -p erroring instantly) must never report FAILED against an empty or missing log.
+echo "$(date '+%F %T') | ${JOB} | started" >> "$LOG_FILE"
 
 alert() {
   # $1 = message. A Telegram outage must never crash the wrapper itself.
@@ -59,7 +99,34 @@ case "$JOB" in
     exec 9>"$LOCK_FILE"
     flock -n 9 || fail "previous ${JOB} run still in progress (lock held)"
 
-    if ! timeout -k 1m 70m claude -p --dangerously-skip-permissions "$(cat "$PROMPT_FILE")" > "$LOG_FILE" 2>&1; then
+    # Guard against burning a whole run on nothing: a missing file, a bad path, or an
+    # unquoted variable that silently expands to empty must abort BEFORE calling claude,
+    # not after 70 minutes of doing nothing useful with an empty instruction.
+    if [ ! -s "$PROMPT_FILE" ]; then
+      fail "prompt file ${PROMPT_FILE} is missing or empty -- refusing to call claude with no instructions"
+    fi
+    PROMPT_CONTENT="$(cat "$PROMPT_FILE")"
+    if [ -z "$PROMPT_CONTENT" ]; then
+      fail "prompt file ${PROMPT_FILE} read as empty -- refusing to call claude with no instructions"
+    fi
+
+    # Run claude -p from a dedicated, empty directory -- NEVER from $PACK_DIR. Confirmed by
+    # direct repro (2026-07-27): invoking `claude -p` with cwd inside this project's own
+    # directory reliably makes it treat the whole prompt as background context and reply with
+    # a generic "what would you like help with", doing zero real work -- with no error and no
+    # non-zero exit for this script to catch. 3/3 failures from $PACK_DIR, 4/4 successes from a
+    # neutral cwd, confirmed via the session transcripts themselves: broken runs are one short
+    # text turn with zero tool calls, working runs show full multi-step tool engagement and
+    # correct skill loading. Literal session resumption (-c/--continue) was ruled out
+    # structurally -- every run creates its own fresh session file. Every path the actual task
+    # touches is already absolute throughout this pack, so this has no effect on what the run
+    # can do; it only avoids whatever project-directory-scoped state causes the failure.
+    mkdir -p "$CLAUDE_RUN_CWD"
+    cd "$CLAUDE_RUN_CWD"
+    timeout -k 1m 70m claude -p --dangerously-skip-permissions "$PROMPT_CONTENT" >> "$LOG_FILE" 2>&1
+    CLAUDE_EXIT=$?
+    cd "$PACK_DIR"
+    if [ "$CLAUDE_EXIT" -ne 0 ]; then
       fail "timeout or non-zero exit"
     fi
 
@@ -96,7 +163,7 @@ Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>"
     exec 9>"$LOCK_FILE"
     flock -n 9 || fail "previous index run still in progress (lock held)"
 
-    timeout -k 1m 10m python3 scripts/auto_index.py daily "$SITE_JSON" > "$LOG_FILE" 2>&1 \
+    timeout -k 1m 10m python3 scripts/auto_index.py daily "$SITE_JSON" >> "$LOG_FILE" 2>&1 \
       || fail "daily indexing failed"
 
     # Sunday's index run also does the weekly sitemap resubmit + not-indexed report.

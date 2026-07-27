@@ -2,5 +2,6 @@
 .env.*
 status/
 secrets/
+logs/
 __pycache__/
 *.pyc
