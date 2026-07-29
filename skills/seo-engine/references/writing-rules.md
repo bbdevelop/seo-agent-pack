@@ -270,8 +270,11 @@ After writing, do **ONE** editor pass over the draft against this checklist. Thi
 - [ ] Title varied (not formulaic "guide"), primary keyword first; **rendered `<title>` ≤ ~60 chars with NO duplicated brand** (account for the layout title template); meta description ≤ ~150-155 chars, keyword in the first 20 words.
 
 **Assets & technical:**
-- [ ] All images present (featured + one per H2), ultra-detailed prompts used, keyword-slug filenames,
-      **first content image alt = exact focus keyword**, AVIF in-page + WebP OG, your site aesthetic.
+- [ ] **Same-run image generation:** all images present (featured + one per H2), ultra-detailed prompts
+      used, keyword-slug filenames, **first content image alt = exact focus keyword**, AVIF in-page +
+      WebP OG, your site aesthetic. **Deferred image generation** (run-protocol.md step 4): every
+      image has a saved prompt file at the pending-images path instead, filename exactly matching its
+      body reference; the images themselves are not expected to exist yet.
 - [ ] On sites with `design-components.md` components: `class="quick-answer"` count = 1; `class="pros-cons"`
       count = 1 (the single hero recommendation only — never more, per monetization.md), with a matching
       `class="cta-button"`; other affiliate links appear via a recommended-gear list, inline contextual

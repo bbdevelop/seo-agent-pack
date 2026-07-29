@@ -23,3 +23,10 @@ PATH=/home/bb/.local/bin:/home/bb/.nvm/versions/node/v24.18.0/bin:/usr/local/bin
 
 # Page night: Tue / Thu / Sat, 4am
 0 4 * * 2,4,6  /home/bb/seo-agent-pack/scripts/run-wildscout.org.sh page
+
+# Deferred image generation: picks up any prompts the article/page write-step saved to
+# status/pending-images/ and generates them via a plain deterministic loop (see design notes in
+# generate-pending-images.sh for why this, not agent-orchestrated backgrounding, is what actually
+# fixes the 2026-07-29 timeout). Runs daily -- idempotent and self-healing, so it also catches up
+# after any prior failed run, not just the night's own job.
+35 4 * * *     /home/bb/seo-agent-pack/scripts/generate-pending-images.sh

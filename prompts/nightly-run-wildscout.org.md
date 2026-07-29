@@ -12,7 +12,15 @@ brief from DataForSEO (scripts/dataforseo_keywords.py) and Search Console (scrip
 only, apply the five gates, do the competitor pass and write the differentiation sentence, write
 the piece under writing-rules.md with the anti-slop and humanizer passes, monetize every product
 mention per monetization.md (real Amazon Associates links or the manual-link placeholder, one FTC
-disclosure), generate images per image-prompts.md with scripts/gemini_image.py and verify every
-file resolves, save everything as a draft (articles and pages both draft-only for this site), append
-one status line to /home/bb/seo-agent-pack/status/<YYYY-MM-DD>.txt (today's date), and send me the
-Telegram summary via scripts/telegram_bot.py.
+disclosure). For article and page jobs, do NOT generate images yourself: write each image's full
+500-800 word prompt per image-prompts.md and save it to
+/home/bb/seo-agent-pack/status/pending-images/<slug>/<image-filename-without-extension>.txt, one
+file per required image, the filename matching the image's reference in the body exactly (featured
+image included). A separate deterministic job generates, verifies, commits, and notifies once
+they're done -- do not call scripts/gemini_image.py directly and do not wait for it. Save
+everything as a draft (articles and pages both draft-only for this site) referencing the expected
+final image paths, append one status line to /home/bb/seo-agent-pack/status/<YYYY-MM-DD>.txt
+(today's date) noting images are pending, and send NO Telegram message for article/page jobs -- the
+images job sends the single notification once the piece is actually complete and reviewable. Sunday
+optimization jobs are unaffected: they still send their own summary via scripts/telegram_bot.py as
+before.

@@ -40,12 +40,33 @@ The cron wrapper calls the agent headless with: the **site** (from your site lis
 3. Write the article via the config's **voice guide** + `references/writing-rules.md` (blocking checklist). On a bilingual site, write the primary language first, then the second.
 4. Generate all images (featured + one per H2) with the **site's own image pipeline**: detailed prompts, keyword-slug filenames, AVIF + WebP-OG, keyword alts. **The filename of each generated image MUST exactly match an image reference in the body** (featured + one per H2). Per pipeline type:
    - **Local-files site:** your image-generation script writes files into the site's public assets dir (committed + served with the site).
+   - **Local-files site, deferred generation (recommended whenever image count × per-image generation
+     time risks exceeding the run's own timeout):** instead of generating images inline, write each
+     image's full prompt to the site's configured pending-images directory (one file per required
+     image, filename matching the image's body reference exactly) and let a separate, deterministically
+     scripted images job generate, verify, and commit them afterward on its own schedule and its own
+     timeout. See the site's wrapper docs for the exact pending-images path and job name. This mode
+     exists because agent-orchestrated background image generation can silently hang in headless (`-p`)
+     mode waiting on a completion signal that doesn't reliably fire outside an interactive session -- a
+     plain deterministic script loop calling the image API directly has no such failure mode.
    - **CDN/bucket site:** use the script that actually **uploads** to the bucket. A generator that only writes local files means every image 404s in production; never use it for a CDN-served site.
    - **CMS site:** your publish script uploads the AVIF in-page images + the WebP OG to the media library.
 5. Internal linking pass (relevance-gated, cooldown-aware, same-locale on bilingual sites).
 6. **SELF-REVIEW GATE (mandatory):** run the self-review checklist at the end of `writing-rules.md` on the finished draft. Fix anything that fails and re-check. **Then the QUALITY GATE (one bounded pass):** review the finished draft for AI-citability (would an AI engine quote the opening sentence? is each section extractable as a clean capsule?) and for E-E-A-T (experience, expertise, authoritativeness, trust signals: author expertise, a date, an honest recommendation), and apply the HIGH-impact fixes only: a first sentence a model won't quote, a missing E-E-A-T signal, a passage that should be a clean quotable capsule. Cap: ONE corrective pass, never loop or rewrite wholesale. Do NOT proceed until every item passes.
 7. Save as **draft** to the config's target (registry entry with status `draft` + the content file; a DB row with status draft; or the CMS via REST with status draft).
-8. **IMAGE-VERIFICATION GATE (mandatory, never skip):** confirm **every** image referenced in the finished article actually resolves, before writing the status line. Local-files site → each file exists on disk (and is in the commit); CDN site → `curl` each CDN URL (featured `.avif` + `.webp` + every section `.avif`) returns **200**; CMS site → each in-content image + the featured return **200** from the media URL. If **any** image is missing / 404, regenerate + re-upload (re-run the site's image script) until all pass. **Never report the run done with a broken or missing image.** Then build/verify (the config says how) and write the draft URL + "self-review passed; images verified" to the status file.
+8. **IMAGE-VERIFICATION GATE (mandatory, never skip) for same-run image generation:** confirm **every**
+   image referenced in the finished article actually resolves, before writing the status line.
+   Local-files site → each file exists on disk (and is in the commit); CDN site → `curl` each CDN URL
+   (featured `.avif` + `.webp` + every section `.avif`) returns **200**; CMS site → each in-content
+   image + the featured return **200** from the media URL. If **any** image is missing / 404,
+   regenerate + re-upload until all pass. **Never report the run done with a broken or missing image.**
+   **For deferred image generation (step 4):** this gate does not apply to the write step. Instead,
+   confirm every required image has a saved prompt file at the pending-images path with a filename
+   exactly matching its body reference, write the status line noting images are pending, and send NO
+   notification -- the images job runs this same verification once it has actually generated the
+   files, and is the one that notifies. Then build/verify (the config says how) and write the draft
+   URL + "self-review passed; images verified" (same-run) or "self-review passed; images pending"
+   (deferred) to the status file.
 
 ## 1B. Page day (Tue / Thu / Sat)
 
